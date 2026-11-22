@@ -1,0 +1,17 @@
+{
+  "name": "npm-2",
+  "version": "1.0.0",
+  "description": "Interactive demo project for @pr0zpect/env-guard and Express",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+    "dev": "node --env-file=.env --watch server.js",
+    "demo": "node demo.js",
+    "test": "node --env-file=.env test.js"
+  },
+  "dependencies": {
+    "@pr0zpect/env-guard": "^1.0.0",
+    "express": "^4.21.2"
+  }
+}

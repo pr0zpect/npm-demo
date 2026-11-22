@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@pr0zpect/env-guard Demo & Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <!-- Top Navigation -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🛡️</span>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            @pr0zpect/env-guard
+            <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">v1.0.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Interactive Demo & Live Playground</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="server-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Express Server Active
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <!-- Hero / Intro -->
+    <div class="bg-gradient-to-r from-slate-900 to-indigo-950/40 border border-slate-800 rounded-xl p-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white mb-1">Type-Safe Environment Validation with Secret Protection</h2>
+          <p class="text-slate-400 text-sm max-w-2xl">
+            This demo demonstrates how <code class="text-emerald-400 bg-emerald-950/50 px-1 py-0.5 rounded text-xs">@pr0zpect/env-guard</code> prevents startup crashes, coerces types, enforces strict schemas, and automatically redacts secrets from logs and diagnostics.
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <a href="#playground" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition">Open Playground</a>
+          <a href="#protected-test" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition">Test Auth Route</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Server Environment Section -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-base font-semibold text-white flex items-center gap-2">
+            <span>⚙️</span> Active Server Config (<code class="text-xs text-indigo-400">getSanitizedEnv</code>)
+          </h3>
+          <p class="text-xs text-slate-400">Environment variables loaded into this running Express process at boot time.</p>
+        </div>
+        <button onclick="loadServerConfig()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+          ↻ Refresh
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-3">
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">PORT (Type: Port)</span>
+          <div id="cfg-port" class="text-lg font-mono font-bold text-indigo-400 mt-1">...</div>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-3">
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">NODE_ENV (Enum)</span>
+          <div id="cfg-env" class="text-lg font-mono font-bold text-emerald-400 mt-1">...</div>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-3">
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">APP_NAME (String)</span>
+          <div id="cfg-appname" class="text-lg font-mono font-bold text-slate-200 mt-1">...</div>
+        </div>
+        <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-3">
+          <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">API_KEY (Secret)</span>
+          <div id="cfg-apikey" class="text-lg font-mono font-bold text-amber-400 mt-1">...</div>
+        </div>
+      </div>
+
+      <details class="text-xs bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-400">
+        <summary class="cursor-pointer font-medium text-slate-300">View Raw JSON Response</summary>
+        <pre id="cfg-raw" class="mt-2 text-indigo-300 font-mono overflow-x-auto">Loading...</pre>
+      </details>
+    </section>
+
+    <!-- Live Interactive Playground -->
+    <section id="playground" class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div>
+          <h3 class="text-base font-semibold text-white flex items-center gap-2">
+            <span>🧪</span> Live EnvGuard Playground
+          </h3>
+          <p class="text-xs text-slate-400">Test any schema against arbitrary environment inputs and see instant validation results.</p>
+        </div>
+        <!-- Preset Scenario Buttons -->
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setScenario('valid')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded border border-slate-700">
+            ✅ All Valid
+          </button>
+          <button onclick="setScenario('errors')" class="text-xs bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded border border-rose-800/50">
+            ❌ Multi-Error Fail
+          </button>
+          <button onclick="setScenario('secret')" class="text-xs bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 px-2.5 py-1 rounded border border-amber-800/50">
+            🔒 Secret Masking
+          </button>
+          <button onclick="setScenario('conditional')" class="text-xs bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 px-2.5 py-1 rounded border border-indigo-800/50">
+            🔀 Conditional (S3)
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Input Column -->
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-semibold text-slate-300 font-mono">1. Schema Definition (JSON)</label>
+              <span class="text-[11px] text-slate-500">Field types: port, enum, url, email, boolean, string, number</span>
+            </div>
+            <textarea id="schema-input" rows="9" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs text-emerald-300 focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-semibold text-slate-300 font-mono">2. Environment Variables Source (JSON)</label>
+              <span class="text-[11px] text-slate-500">Simulates process.env string inputs</span>
+            </div>
+            <textarea id="source-input" rows="6" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs text-amber-300 focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+
+          <button onclick="runValidation()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2">
+            <span>⚡ Run envGuard() Validation</span>
+          </button>
+        </div>
+
+        <!-- Output Column -->
+        <div class="flex flex-col">
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-semibold text-slate-300 font-mono">Execution Output & Terminal Diagnostic</label>
+            <span id="validation-tag" class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Ready</span>
+          </div>
+          <div id="output-box" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-xs overflow-auto max-h-[460px] whitespace-pre">
+Select a scenario or click "Run envGuard() Validation" to see results.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Protected Endpoint Verification -->
+    <section id="protected-test" class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+      <div class="mb-4">
+        <h3 class="text-base font-semibold text-white flex items-center gap-2">
+          <span>🔐</span> Protected Route Test (<code class="text-xs text-indigo-400">GET /protected</code>)
+        </h3>
+        <p class="text-xs text-slate-400">Demonstrates route security guarded by validated <code class="text-slate-300">API_KEY</code>.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-2">
+          <label class="block text-xs font-semibold text-slate-300 mb-1">x-api-key Header Value:</label>
+          <div class="flex gap-2">
+            <input id="key-input" type="text" placeholder="Enter API key..." value="super-secret-production-token-999" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-indigo-500" />
+            <button onclick="document.getElementById('key-input').value = ''" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700">Clear</button>
+          </div>
+        </div>
+        <button onclick="testProtected()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition">
+          Send Request
+        </button>
+      </div>
+
+      <div id="auth-result" class="mt-4 hidden p-3 rounded-lg border text-xs font-mono"></div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 text-center py-6 text-xs text-slate-500">
+    Built with <strong class="text-slate-400">@pr0zpect/env-guard</strong> & Express.js
+  </footer>
+
+  <script>
+    const scenarios = {
+      valid: {
+        schema: {
+          PORT: { type: "port", default: 8080 },
+          NODE_ENV: { type: "enum", values: ["development", "production", "test"], default: "development" },
+          DATABASE_URL: { type: "url", required: true },
+          DEBUG: { type: "boolean", default: false },
+          ADMIN_EMAIL: { type: "email", required: true }
+        },
+        source: {
+          PORT: "8080",
+          DATABASE_URL: "https://db.prod.internal:5432/main",
+          DEBUG: "true",
+          ADMIN_EMAIL: "devops@company.com"
+        }
+      },
+      errors: {
+        schema: {
+          PORT: { type: "port", required: true },
+          API_URL: { type: "url", required: true },
+          ENVIRONMENT: { type: "enum", values: ["dev", "prod"] },
+          SECRET_TOKEN: { type: "string", required: true, secret: true }
+        },
+        source: {
+          PORT: "99999",
+          API_URL: "not-a-valid-url",
+          ENVIRONMENT: "staging"
+        }
+      },
+      secret: {
+        schema: {
+          APP_NAME: { type: "string", default: "Secure App" },
+          DATABASE_PASSWORD: { type: "string", required: true, secret: true },
+          PAYMENT_GATEWAY_KEY: { type: "string", required: true, secret: true }
+        },
+        source: {
+          DATABASE_PASSWORD: "top-secret-password-xyz",
+          PAYMENT_GATEWAY_KEY: "sk_live_998877665544"
+        }
+      },
+      conditional: {
+        schema: {
+          STORAGE_TYPE: { type: "enum", values: ["local", "s3"], default: "local" },
+          AWS_S3_BUCKET: {
+            type: "string",
+            requiredWhen: { variable: "STORAGE_TYPE", equals: "s3" }
+          }
+        },
+        source: {
+          STORAGE_TYPE: "s3"
+        }
+      }
+    };
+
+    function setScenario(name) {
+      const s = scenarios[name];
+      if (!s) return;
+      document.getElementById('schema-input').value = JSON.stringify(s.schema, null, 2);
+      document.getElementById('source-input').value = JSON.stringify(s.source, null, 2);
+      runValidation();
+    }
+
+    async function loadServerConfig() {
+      try {
+        const res = await fetch('/config');
+        const data = await res.json();
+        const cfg = data.config;
+        document.getElementById('cfg-port').innerText = cfg.PORT;
+        document.getElementById('cfg-env').innerText = cfg.NODE_ENV;
+        document.getElementById('cfg-appname').innerText = cfg.APP_NAME;
+        document.getElementById('cfg-apikey').innerText = cfg.API_KEY;
+        document.getElementById('cfg-raw').innerText = JSON.stringify(data, null, 2);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function runValidation() {
+      const schemaText = document.getElementById('schema-input').value;
+      const sourceText = document.getElementById('source-input').value;
+      const outputBox = document.getElementById('output-box');
+      const tag = document.getElementById('validation-tag');
+
+      outputBox.innerText = "Validating...";
+      tag.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300";
+      tag.innerText = "Running...";
+
+      try {
+        const schema = JSON.parse(schemaText);
+        const source = JSON.parse(sourceText);
+
+        const res = await fetch('/api/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ schema, source })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          tag.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800";
+          tag.innerText = "✓ Validated OK";
+
+          let html = `✅ SUCCESS: Environment validated successfully!\n\n`;
+          html += `--- Parsed In-Memory Object (types coerced) ---\n`;
+          html += JSON.stringify(result.env, null, 2) + `\n\n`;
+          html += `--- Sanitized Diagnostic View (secrets masked) ---\n`;
+          html += JSON.stringify(result.sanitized, null, 2);
+          outputBox.innerText = html;
+        } else {
+          tag.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800";
+          tag.innerText = "✗ EnvGuardError (" + result.issues.length + " issues)";
+
+          let html = `❌ VALIDATION FAILED (Caught EnvGuardError):\n\n`;
+          if (result.formatted) {
+            html += result.formatted + `\n\n`;
+          }
+          html += `--- Structured Machine-Readable Issues ---\n`;
+          html += JSON.stringify(result.issues, null, 2);
+          outputBox.innerText = html;
+        }
+      } catch (err) {
+        tag.className = "text-[11px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-400";
+        tag.innerText = "JSON Error";
+        outputBox.innerText = "Error parsing input JSON:\n" + err.message;
+      }
+    }
+
+    async function testProtected() {
+      const key = document.getElementById('key-input').value;
+      const resultBox = document.getElementById('auth-result');
+      resultBox.classList.remove('hidden');
+
+      try {
+        const headers = key ? { 'x-api-key': key } : {};
+        const res = await fetch('/protected', { headers });
+        const data = await res.json();
+
+        if (res.ok) {
+          resultBox.className = "mt-4 p-3 rounded-lg border text-xs font-mono bg-emerald-950/40 border-emerald-800 text-emerald-300";
+          resultBox.innerText = `Status ${res.status} OK:\n` + JSON.stringify(data, null, 2);
+        } else {
+          resultBox.className = "mt-4 p-3 rounded-lg border text-xs font-mono bg-rose-950/40 border-rose-800 text-rose-300";
+          resultBox.innerText = `Status ${res.status} ${res.statusText}:\n` + JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        resultBox.className = "mt-4 p-3 rounded-lg border text-xs font-mono bg-rose-950/40 border-rose-800 text-rose-300";
+        resultBox.innerText = "Fetch error: " + err.message;
+      }
+    }
+
+    // Initialize default scenario and config
+    window.onload = () => {
+      loadServerConfig();
+      setScenario('valid');
+    };
+  </script>
+</body>
+</html>
